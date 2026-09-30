@@ -1,4 +1,15 @@
 # Byte-compiled / optimized / DLL files
+
+
+.env
+.venv/
+.DS_Store
+__pycache__/
+*.pyc
+
+docs/The Information Lab Data Engineering Consultant - Application Process.pdf
+
+
 __pycache__/
 *.py[cod]
 *$py.class

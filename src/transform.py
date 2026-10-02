@@ -1,7 +1,9 @@
 from pathlib import Path
 import duckdb
+import os
 
-DB_PATH = Path("database/clubarc.duckdb")
+DB_PATH = Path(os.getenv("CLUBARC_DB_PATH", "database/clubarc.duckdb"))
+
 SQL_FILES = [
     Path("sql/01_team_match_results.sql"),
     Path("sql/02_team_season_summary.sql"),

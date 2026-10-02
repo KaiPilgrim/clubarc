@@ -3,15 +3,31 @@ import duckdb
 import streamlit as st
 import subprocess
 import sys
+import os
 
 
+st.set_page_config(
+    page_title="ClubArc",
+    layout="wide"
+)
 
-DB_PATH = Path("database/clubarc.duckdb")
+local_db_path = os.getenv("CLUBARC_DB_PATH")
 
 
-if not DB_PATH.exists():
-    subprocess.run([sys.executable, "src/load.py"], check=True)
-    subprocess.run([sys.executable, "src/transform.py"], check=True)
+if local_db_path:
+    DB_PATH = Path(local_db_path)
+
+else:
+    DB_PATH = Path(
+        f"/tmp/clubarc_{os.getpid()}.duckdb"
+    )
+    
+    if not DB_PATH.exists():
+        env = os.environ.copy()
+        env["CLUBARC_DB_PATH"] = str(DB_PATH)
+
+        subprocess.run([sys.executable, "src/load.py"], check=True, env=env)
+        subprocess.run([sys.executable, "src/transform.py"], check=True, env=env)
 
 con = duckdb.connect(database=DB_PATH, read_only=True)
 
@@ -22,11 +38,6 @@ teams = con.execute("""
     FROM team_season_summary
     ORDER BY team_name
 """).fetchall()
-
-st.set_page_config(
-    page_title="ClubArc",
-    layout="wide"
-)
 
 st.title("ClubArc")
 st.subheader("Premier League Club Analytics")
@@ -137,3 +148,4 @@ st.dataframe(
     width='stretch'
 )
 
+con.close()

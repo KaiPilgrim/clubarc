@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
 import duckdb
-
+import os
 
 RAW_DIR = Path("data/raw")
-DB_PATH = Path("database/clubarc.duckdb")
+DB_PATH = Path(os.getenv("CLUBARC_DB_PATH", "database/clubarc.duckdb"))
 SEASONS = [2023, 2024, 2025, 2026]
 
 con = duckdb.connect(database=DB_PATH, read_only=False)

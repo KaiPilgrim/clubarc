@@ -1,10 +1,17 @@
 from pathlib import Path
-
 import duckdb
 import streamlit as st
+import subprocess
+import sys
+
 
 
 DB_PATH = Path("database/clubarc.duckdb")
+
+
+if not DB_PATH.exists():
+    subprocess.run([sys.executable, "src/load.py"], check=True)
+    subprocess.run([sys.executable, "src/transform.py"], check=True)
 
 con = duckdb.connect(database=DB_PATH, read_only=True)
 
@@ -62,7 +69,71 @@ summary = con.execute("""
 st.dataframe(
     summary,
     hide_index=True,
-    use_container_width=True
+    width='stretch'
 )
 
+
+progress = con.execute("""
+    SELECT
+        season_start_year,
+        club_match_number,
+        cumulative_points
+    FROM team_season_progress
+    WHERE team_id = ?
+    ORDER BY season_start_year, club_match_number
+""", [selected_team_id]).df()
+
+st.subheader("Season Trajectory")
+
+chart_data = progress.pivot(
+    index="club_match_number",
+    columns="season_start_year",
+    values="cumulative_points"
+)
+
+st.line_chart(chart_data)
+
+current_season_matches = con.execute("""
+    SELECT MAX(club_match_number)
+    FROM team_season_progress
+    WHERE team_id = ?
+      AND season_start_year = 2026
+""", [selected_team_id]).fetchone()[0]
+
+if current_season_matches is not None:
+    max_matches = min(current_season_matches, 38)
+else:
+    max_matches = 38
+
+compare_after = st.slider(
+    "Compare seasons after completed matches",
+    min_value=1,
+    max_value=max_matches,
+    value=max_matches
+)
+
+comparison = con.execute("""
+    SELECT
+        season_start_year,
+        cumulative_wins AS wins,
+        cumulative_draws AS draws,
+        cumulative_losses AS losses,
+        cumulative_goals_for AS goals_for,
+        cumulative_goals_against AS goals_against,
+        cumulative_goal_difference AS goal_difference,
+        cumulative_points AS points,
+        cumulative_points_per_game AS points_per_game
+    FROM team_season_progress
+    WHERE team_id = ?
+      AND club_match_number = ?
+    ORDER BY season_start_year
+""", [selected_team_id, compare_after]).df()
+
+st.subheader(f"Performance after {compare_after} completed matches")
+
+st.dataframe(
+    comparison,
+    hide_index=True,
+    width='stretch'
+)
 

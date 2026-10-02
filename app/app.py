@@ -18,16 +18,17 @@ if local_db_path:
     DB_PATH = Path(local_db_path)
 
 else:
-    DB_PATH = Path(
-        f"/tmp/clubarc_{os.getpid()}.duckdb"
-    )
+    DB_PATH = Path("/tmp/clubarc.duckdb")
     
     if not DB_PATH.exists():
+        BUILD_PATH = Path(f"/tmp/clubarc_build_{os.getpid()}.duckdb")
         env = os.environ.copy()
         env["CLUBARC_DB_PATH"] = str(DB_PATH)
 
         subprocess.run([sys.executable, "src/load.py"], check=True, env=env)
         subprocess.run([sys.executable, "src/transform.py"], check=True, env=env)
+
+        os.replace(BUILD_PATH, DB_PATH)
 
 con = duckdb.connect(database=DB_PATH, read_only=True)
 

@@ -1,5 +1,12 @@
+/*
+03_team_season_progress.sql
+
+Shows each team's cumulative performance after every match across the season.
+*/
+
 CREATE OR REPLACE VIEW team_season_progress AS
 
+-- Create a cumulative progress view for each team in each season by aggregating the match results.
 WITH progress AS (
 
     SELECT
@@ -16,6 +23,7 @@ WITH progress AS (
         venue,
         result,
 
+    -- Calculate each team's cumulative totals after every completed match.
         SUM(CASE WHEN result = 'W' THEN 1 ELSE 0 END)
             OVER (
                 PARTITION BY season_start_year, team_id
@@ -55,6 +63,7 @@ WITH progress AS (
     FROM team_match_results
 )
 
+-- Calculate the cumulative goal difference and points per game for each team in each season.
 SELECT
     *,
     cumulative_goals_for - cumulative_goals_against

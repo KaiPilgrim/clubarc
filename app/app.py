@@ -1,3 +1,15 @@
+"""
+app.py
+
+This script is the Streamlit web application for the ClubArc project.
+The app lets users explore a Premier League club's performance across
+multiple seasons, view cumulative points trajectories, and compare
+seasons after the same number of completed matches.
+
+The application reads from the transformed DuckDB views created by
+the ClubArc data pipeline.
+"""
+
 from pathlib import Path
 import duckdb
 import streamlit as st
@@ -11,6 +23,8 @@ st.set_page_config(
     layout="wide"
 )
 
+
+# Use the local pipeline database when provided; otherwise build a temporary database for deployment.
 local_db_path = os.getenv("CLUBARC_DB_PATH")
 
 
@@ -23,7 +37,7 @@ else:
     if not DB_PATH.exists():
         BUILD_PATH = Path(f"/tmp/clubarc_build_{os.getpid()}.duckdb")
         env = os.environ.copy()
-        env["CLUBARC_DB_PATH"] = str(DB_PATH)
+        env["CLUBARC_DB_PATH"] = str(BUILD_PATH)
 
         subprocess.run([sys.executable, "src/load.py"], check=True, env=env)
         subprocess.run([sys.executable, "src/transform.py"], check=True, env=env)
@@ -32,6 +46,7 @@ else:
 
 con = duckdb.connect(database=DB_PATH, read_only=True)
 
+# Load the available clubs from the season summary view.
 teams = con.execute("""
     SELECT DISTINCT
         team_id,
@@ -58,6 +73,7 @@ selected_team_id = next(
 
 st.subheader(f"{selected_team} Season Overview")
 
+# Show each season's final performance for the selected club.
 summary = con.execute("""
     SELECT
         CAST(season_start_year AS VARCHAR)
@@ -84,7 +100,7 @@ st.dataframe(
     width='stretch'
 )
 
-
+# Compare the selected club's cumulative points trajectory across seasons.
 progress = con.execute("""
     SELECT
         season_start_year,
@@ -105,6 +121,7 @@ chart_data = progress.pivot(
 
 st.line_chart(chart_data)
 
+# Limit comparisons to the number of matches completed in the current season.
 current_season_matches = con.execute("""
     SELECT MAX(club_match_number)
     FROM team_season_progress
@@ -117,13 +134,14 @@ if current_season_matches is not None:
 else:
     max_matches = 38
 
+# Let the user choose the gameweek to compare across seasons.
 compare_after = st.slider(
     "Compare seasons after completed matches",
     min_value=1,
     max_value=max_matches,
     value=max_matches
 )
-
+# Compare each season at the same point in the campaign.
 comparison = con.execute("""
     SELECT
         season_start_year,

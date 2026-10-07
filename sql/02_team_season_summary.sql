@@ -1,5 +1,13 @@
+/*
+02_team_season_summary.sql
+
+This view recreates a league table for each team in each season based on the match results view.
+
+*/
+
 CREATE OR REPLACE VIEW team_season_summary AS
 
+-- Create a summary of each team's season by aggregating the match results.
 WITH season_totals AS (
 
     SELECT
@@ -20,25 +28,29 @@ WITH season_totals AS (
 
         SUM(points) AS points,
 
+        -- Keep home and away points separate so performance by venue can be compared.
         SUM(points) FILTER (WHERE venue = 'HOME') AS home_points,
         SUM(points) FILTER (WHERE venue = 'AWAY') AS away_points
 
-    FROM team_match_results
-
-    GROUP BY
+    -- Use the team_match_results view to aggregate the data for each team in each season.
+    FROM team_match_results 
+    GROUP BY 
         season_start_year,
         season_id,
         team_id,
         team_name
 ),
 
-ranked AS (
+-- Rank the teams in each season based on points, goal difference, and goals scored to determine their league position.
+ranked AS ( 
 
     SELECT
         *,
-        ROUND(points::DOUBLE / played, 2) AS points_per_game,
+        -- Calculate the average points per game for each team in each season.
+        ROUND(points::DOUBLE / played, 2) AS points_per_game, 
 
-        ROW_NUMBER() OVER (
+        -- Apply tie breaking rules using the Premier League ranking system when teams are level on points.
+        ROW_NUMBER() OVER ( 
             PARTITION BY season_start_year
             ORDER BY
                 points DESC,
@@ -46,8 +58,9 @@ ranked AS (
                 goals_for DESC
         ) AS league_position
 
-    FROM season_totals
+    FROM season_totals 
 )
 
+-- Return the final league table for each team in each season.
 SELECT *
-FROM ranked;
+FROM ranked; 

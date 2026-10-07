@@ -1,3 +1,12 @@
+"""
+validate.py
+
+This script is the fourth step in the data pipeline for the ClubArc project.
+Loads the API standings data into a reference table and compares it
+against the derived season summary to check that the transformation
+logic reproduces the published standings correctly.
+"""
+
 import json
 from pathlib import Path
 import duckdb
@@ -9,6 +18,7 @@ SEASONS = [2023, 2024, 2025, 2026]
 
 con = duckdb.connect(database=DB_PATH, read_only=False)
 
+# Create a reference table from the API standings for validation.
 con.execute("""
     CREATE OR REPLACE TABLE standings_reference (
         season_start_year INTEGER,
@@ -32,11 +42,13 @@ for season in SEASONS:
     with open(input_file, "r") as file:
         data = json.load(file)
 
+    # Use the overall league table rather than the home or away standings.
     total_standings = next(
         standing for standing in data["standings"]
         if standing["type"] == "TOTAL"
     )
 
+    # Select the official standings fields used to validate the derived summary.
     rows = []
 
     for team in total_standings["table"]:
@@ -61,13 +73,14 @@ for season in SEASONS:
 
     print(f"Loaded {season} reference standings")
 
-
+# Create the validation view that compares derived metrics with the API reference.
 validation_sql = Path(
-    "sql/03_validate_team_season_summary.sql"
+    "sql/04_validate_team_season_summary.sql"
 ).read_text()
 
 con.execute(validation_sql)
 
+# Count any team-season records where at least one metric does not match.
 mismatches = con.execute("""
     SELECT *
     FROM season_summary_validation

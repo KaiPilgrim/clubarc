@@ -1,3 +1,10 @@
+/*
+04_validate_team_season_summary.sql
+
+Validates the team season summary against the Football-Data.org API standings for each season.
+Each field is compared individually and an overall valid flag shows whether the derived season summary matches the reference data.
+*/
+
 CREATE OR REPLACE VIEW season_summary_validation AS
 
 SELECT
@@ -5,6 +12,7 @@ SELECT
     summary.team_id,
     summary.team_name,
 
+    -- Compare each field in the team season summary with the corresponding field in the reference standings.
     summary.played = reference.played AS played_match,
     summary.wins = reference.wins AS wins_match,
     summary.draws = reference.draws AS draws_match,
@@ -17,7 +25,8 @@ SELECT
     summary.points = reference.points AS points_match,
     summary.league_position = reference.position AS position_match,
 
-    (
+        -- Mark the row as valid only when every checked metric matches.
+    (   
         summary.played = reference.played
         AND summary.wins = reference.wins
         AND summary.draws = reference.draws
@@ -31,6 +40,7 @@ SELECT
 
 FROM team_season_summary AS summary
 
+-- Join the team season summary with the reference standings to compare the derived data with the official data.
 JOIN standings_reference AS reference
     ON summary.season_start_year = reference.season_start_year
     AND summary.team_id = reference.team_id;

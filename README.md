@@ -10,6 +10,20 @@ ClubArc is an end to end data pipeline built for comparing Premier League club p
 
 ---
 
+## About Me
+
+I am a Data Science and Analytics MSc graduate with a background in Computer Science and Artificial Intelligence. Alongside my studies I spent several years working in management where I regularly worked with operational data, key performance measures and reporting to stakeholders.
+
+I am interested in data engineering because I enjoy building pipelines and understanding how data can be structured and utilised across different settings and industries. Building ClubArc reinforced that interest by giving me the opportunity to work through the full process from API extraction and storage to transformation and presentation.
+
+The consultancy side of the programme also appeals to me because I enjoy learning about new subject areas, understanding what someone actually needs from the data and communicating technical work in a way that is useful to different audiences. I also enjoy working as part of a team, sharing information and learning from others which I see as an important part of consultancy.
+
+The Information Lab particularly interests me because the programme combines structured training with the opportunity to apply those skills across real client projects. I am looking for an environment where I can continue developing technically, learn from experienced people and gain exposure to different industries and data problems.
+
+The Information Lab also has a personal significance to me as it was through first researching the company that I seriously considered pursuing a career in data. Shortly afterwards I decided to pursue my MSc in Data Science and Analytics so applying to the programme now feels like a natural continuation of that journey.
+
+---
+
 ## What I built and who for
 
 ClubArc is a web app that displays Premier League data across the seasons beginning in 2023, 2024, 2025 and 2026. Where ClubArc differs from many football statistics websites is that it provides a detailed view of a team's performance across multiple seasons in one place. It is designed for football fans who enjoy using statistics and data to compare Premier League clubs without having to rely on memory for historical performance.
